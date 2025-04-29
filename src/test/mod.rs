@@ -55,6 +55,14 @@ pub struct Test {
     pub sudden_death_enabled: bool,
 }
 
+trait ExactlyOne<T> : Iterator<Item=T> {
+    fn unwrap_exactly_one(&mut self) -> T {
+        let thing = self.next().expect("Not even one");
+        (if self.next().is_some() { None } else { Some(thing) }).expect("More than one")
+    }
+}
+impl ExactlyOne<char> for std::char::ToLowercase {}
+
 impl Test {
     pub fn new(words: Vec<String>, backtracking_enabled: bool, sudden_death_enabled: bool) -> Self {
         Self {
@@ -125,7 +133,7 @@ impl Test {
                 word.progress.clear();
             }
             KeyCode::Char(c) => {
-                word.progress.push(c);
+                word.progress.push(c.to_lowercase().unwrap_exactly_one());
                 let correct = word.text.starts_with(&word.progress[..]);
                 if self.sudden_death_enabled && !correct {
                     self.reset();
